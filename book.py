@@ -23,13 +23,13 @@ class Book:
 
 
     def __repr__(self):
-        return f"Book({self.id!r}, {self.title!r}, {self.author!r}, {self.status!r})"
+        return f"({self.id!r}: {self.title!r} by {self.author!r} - {self.status!r})"
 
-    # Turns a Book object to a dict 
     def to_dict(self):
+        """Turns a Book object to a dict.""" 
         return self.__dict__
 
-    # Takes a saved dictionary fro json file and rebuilds a Book object
     @staticmethod
     def from_dict(data):
+        """Takes a saved dictionary from a json file and rebuilds a Book object"""
         return Book(**data)  #unpacking the dictionary

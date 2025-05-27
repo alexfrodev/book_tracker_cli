@@ -1,0 +1,77 @@
+"""Defines commands that can be used in the terminal"""
+
+
+import typer
+import uuid
+from book import Book
+from storage import load_books, save_books
+
+app = typer.Typer()
+
+@app.command()
+def add(
+    title: str = typer.Argument(..., help="Title of the book"),
+    author: str = typer.Argument(..., help="Author of the book"),
+    status: str = typer.Option("to_read", help="Reading status (to_read/reading/read/did_not_finish"),
+    rating: int = typer.Option(None, help="Rating (1-5)"),
+    notes: str = typer.Option(None, help="Additional notes")
+):
+    books = load_books()
+    new_book = Book(
+        title = title,
+        author = author,
+        status = status,
+        rating = rating,
+        notes = notes,
+        id = str(uuid.uuid4())
+    )
+
+    books.append(new_book)
+    save_books(books)
+    typer.echo(f"{new_book} added.")
+
+@app.command()
+def list(status: str = typer.Option(None, help="Filter by status")):
+    """List all books, optionally filtered by status"""
+    books = load_books()
+    if status:
+        books = [b for b in books if b.status == status]
+    for book in books:
+        typer.echo(book)
+
+@app.command()
+def update(
+    book_id: str = typer.Argument(..., help="ID of the book to update"),
+    status: str = typer.Option(None, help="New status (to_read/reading/read/did_not_finish)"),
+    rating: int = typer.Option(None, help="New rating (1-5)"),
+    notes: str = typer.Option(None, help="New notes")
+):
+    """Update a book's details by ID"""
+    books = load_books()
+    for book in books:
+        if book.id == book_id:
+            if status:
+                book.status = status
+            if rating is not None:
+                book.rating = rating
+            if notes is not None:
+                book.notes = notes
+            save_books(books)
+            typer.echo(f"Book updated: {book}")
+            return
+    typer.echo(f"Book with ID {book_id} not found", err=True)
+    raise typer.Exit(1)
+
+@app.command()
+def delete(book_id: str = typer.Argument(..., help="ID of the book to delete")):
+    """Delete a book by its ID"""
+    books = load_books()
+    original_count = len(books)
+    books = [b for b in books if b.id != book_id]
+
+    if len(books) == original_count:
+        typer.echo(f"Book with ID {book_id} not founf", err=True)
+        raise typer.Exit(1)
+
+    save_books(books)
+    typer.echo(f"Book with ID {book_id} deleted.")
