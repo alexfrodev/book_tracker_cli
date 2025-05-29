@@ -48,3 +48,8 @@ class Book:
     def from_dict(data):
         """Takes a saved dictionary from a json file and rebuilds a Book object"""
         return Book(**data)  #unpacking the dictionary
+
+    @property
+    def short_id(self):
+        """Return first 8 characters of the ID for display"""
+        return self.id[:8]
