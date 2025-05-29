@@ -3,32 +3,52 @@
 
 import typer
 import uuid
+from typing import Optional
 from book import Book
 from storage import load_books, save_books
 
 app = typer.Typer()
 
+def show_error(message: str):
+    """Display errpr message with red 'Error:' prefix"""
+    typer.secho("Error: ", fg="red", bold=True, nl=False, err=True)
+    typer.echo(message, err=True)
+
 @app.command()
 def add(
     title: str = typer.Argument(..., help="Title of the book"),
     author: str = typer.Argument(..., help="Author of the book"),
-    status: str = typer.Option("to_read", help="Reading status (to_read/reading/read/did_not_finish"),
-    rating: int = typer.Option(None, help="Rating (1-5)"),
-    notes: str = typer.Option(None, help="Additional notes")
+    status: str = typer.Option(
+        "to_read",
+        help="Reading status (to_read/reading/read/did_not_finish)",
+        case_sensitive=False,
+        autocompletion=lambda:["to_read", "reading", "read", "did_not_finish"]
+    ),
+    rating: Optional[int] = typer.Option(None, help="Rating (1-5)"),
+    notes: Optional[str] = typer.Option(None, help="Additional notes")
 ):
-    books = load_books()
-    new_book = Book(
-        title = title,
-        author = author,
-        status = status,
-        rating = rating,
-        notes = notes,
-        id = str(uuid.uuid4())
-    )
+    """Add a new book to the tracker"""
+    try:
+        books = load_books()
+        new_book = Book(
+            title = title,
+            author = author,
+            status = status,
+            rating = rating,
+            notes = notes,
+            id = str(uuid.uuid4())
+        )
 
-    books.append(new_book)
-    save_books(books)
-    typer.echo(f"{new_book} added.")
+        books.append(new_book)
+        save_books(books)
+        typer.echo(f"Added: {new_book.title} by {new_book.author}")
+
+    except ValueError as e:
+        show_error(str(e))
+        raise typer.Exit(1)
+    except Exception as e:
+        show_error("An unexpected error occurred")
+        raise typer.Exit(1)
 
 @app.command()
 def list(status: str = typer.Option(None, help="Filter by status")):
