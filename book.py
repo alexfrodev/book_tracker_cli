@@ -21,6 +21,8 @@ class Book:
             raise ValueError("Title cannot be empty")
         if not author or not author.strip():
             raise ValueError("Author cannot be empty")
+
+        status = status.lower().strip()
         if status not in self.VALID_STATUSES:
             valid_statuses = ", ".join(sorted(self.VALID_STATUSES))
             raise ValueError(f"Invalid status. Must be one of: {valid_statuses}")
