@@ -46,9 +46,16 @@ class MetadataFetcher:
 
         #Try cache first
         if cache_file.exists():
-            cached_data = json.loads(cache_file.read_text())
-            if datetime.now() - cached_data["timestamp"] < 86400:
-                return cached_data["data"]
+            try:
+                cached_data = json.loads(cache_file.read_text())
+                # Check if cache is less than 24 hours old (86400 seconds)
+                cache_age = datetime.now().timestamp() - cached_data["timestamp"]
+                if cache_age < 86400:
+                    return cached_data["data"]
+            except (json.JSONDecodeError, KeyError) as e:
+                # If cache is corrupted, delete it and fetch fresh data
+                typer.echo(f"Cache corrupted, fetching fresh data: {e}", err=True)
+                cache_file.unlink(missing_ok=True)
 
         #Fetch from API
         raw_data = cls._fetch_from_api(title, author)
